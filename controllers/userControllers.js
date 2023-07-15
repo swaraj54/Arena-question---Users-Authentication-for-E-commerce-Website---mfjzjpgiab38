@@ -1,5 +1,5 @@
-const users   = require("../models/user.js");
-const bcrypt  = require('bcrypt');
+const users = require("../models/user.js");
+const bcrypt = require('bcrypt');
 const { valid } = require("joi");
 
 /*
@@ -20,9 +20,43 @@ Post request json file structure
 //to look the user schema look ../models/user.js
 
 
-const loginUser =async (req, res) => {
+const loginUser = async (req, res) => {
 
     //Write youe code here.
+    try {
+        const { email, password } = req.body;
+        if (!email) return res.send("Email is required!");
+        if (!password) return res.send("Password is required!")
+
+        // const hashedPassword = await bcrypt.hash(password, 10);
+        // console.log(hashedPassword, "hashedPassword")
+        const user = await users.findOne({ email })
+        if (!user) {
+            return res.json({
+                status: 404,
+                message: "User with this E-mail does not exist !!"
+            })
+        }
+
+        const isPassValid = await bcrypt.compare(password, user.password);
+
+        console.log(isPassValid, "- check")
+        if (!isPassValid) {
+            return res.json({
+                status: 404,
+                message: "Invalid Password, try again !!"
+            })
+        }
+
+        res.json({
+            status: 200,
+            _id: user._id,
+            name: user.name,
+            email: user.email
+        })
+    } catch (error) {
+        res.send(error)
+    }
 
 }
 
